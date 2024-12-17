@@ -1,5 +1,5 @@
 from db.models.BaseModel import BaseModel
-import config_controller
+import os
 from db.models.imports import *
 
 class AccModel(BaseModel):
@@ -8,8 +8,8 @@ class AccModel(BaseModel):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(255))
     session_name: Mapped[str] = mapped_column(String(255))
-    api_id: Mapped[str] = mapped_column(String(255), default=config_controller.API_ID)
-    api_hash: Mapped[str] = mapped_column(String(255), default=config_controller.API_HASH)
+    api_id: Mapped[str] = mapped_column(String(255), default=os.environ.get('API_ID'))
+    api_hash: Mapped[str] = mapped_column(String(255), default=os.environ.get('API_HASH'))
 
     password: Mapped[str] = mapped_column(String(255), nullable=True)
     phone: Mapped[str] = mapped_column(String(255))

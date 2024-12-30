@@ -5,6 +5,7 @@ from db.models.AccModel import AccModel
 from db.models.ConfigModel import ConfigModel
 from db.models.EventModel import EventModel
 from db.models.ProxyModel import ProxyModel
+from db.models.MsgModel import MsgModel
 
 engine = create_engine("sqlite:///mainbase.db", echo=False)
 

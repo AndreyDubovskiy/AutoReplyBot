@@ -23,6 +23,15 @@ def generate_delete_cancel():
     markup.add(types.InlineKeyboardButton(text="🗑Видалити🗑", callback_data="/delete"))
     markup.add(types.InlineKeyboardButton(text="❌Відмінити❌", callback_data="/cancel"))
     return markup
+
+def generate_delete_cancel_msg():
+    markup = types.InlineKeyboardMarkup(row_width=2)
+    markup.add(types.InlineKeyboardButton(text="❇️Змінити текст повідомлення❇️", callback_data="/msg_edit"))
+    markup.add(types.InlineKeyboardButton(text="🗑Видалити🗑", callback_data="/delete"))
+    markup.add(types.InlineKeyboardButton(text="❌Відмінити❌", callback_data="/cancel"))
+    return markup
+
+
 def generate_list_acc(accs: List[AccModel], page = False):
     markup = types.InlineKeyboardMarkup(row_width=2)
     for i in accs:

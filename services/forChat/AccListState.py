@@ -11,6 +11,7 @@ from telethon.errors.rpcerrorlist import PeerFloodError, UserPrivacyRestrictedEr
 
 from db.controllers.AccsController import AccsController
 from db.controllers.ProxysController import ProxysController
+from db.controllers.MsgsController import MsgsController
 
 
 class AccListState(UserState):
@@ -20,6 +21,7 @@ class AccListState(UserState):
 
         self.accs_controller = AccsController()
         self.proxy_controller = ProxysController()
+        self.msgs_controller = MsgsController()
 
         self.edit = None
         self.acc_count = len(self.accs_controller.get_by(is_active=True))
@@ -70,6 +72,15 @@ class AccListState(UserState):
             await self.send_code()
             return Response("Введіть код, який надіслали у форматі 1-2-3-4-5\n("+self.list_acc_info[0]["phone"]+")", buttons=markups.generate_cancel())
 
+        elif self.edit == "msg_edit":
+            tmp_msg = self.msgs_controller.get_by(acc_id=int(self.current_acc_model.id))
+            if len(tmp_msg) == 0:
+                self.msgs_controller.create(acc_id=int(self.current_acc_model.id), msg_text=message)
+            else:
+                tmp_msg[0].msg_text = message
+                self.msgs_controller.save(tmp_msg[0])
+
+            return Response("Ваше повідомлення збережено!", redirect="/accs")
         elif self.edit == "code_acc":
             code = message.replace(".", "").replace(" ", "").replace("-", "")
             try:
@@ -278,12 +289,28 @@ class AccListState(UserState):
 
             self.current_acc_model = self.accs_controller.get_by(phone=self.current_phone)[0]
             name_session = self.current_acc_model.session_name
+            tmp_id = self.current_acc_model.id
             self.accs_controller.delete(id=self.current_acc_model.id)
             try:
                 os.remove(f"saved/sessions/{name_session}.session")
             except:
                 pass
-            return Response("Видалено!", redirect="/accs")
+            try:
+                self.msgs_controller.delete(id=tmp_id)
+            except:
+                pass
+            return Response("Видалено!\n\n Не забудьте перезавантажити бота для повного видалення!", redirect="/accs")
+        elif data_btn == "/msg_edit":
+            self.edit = "msg_edit"
+            tmp_msg = self.msgs_controller.get_by(acc_id=int(self.current_acc_model.id))
+            text_tmp = ""
+            if len(tmp_msg) == 0:
+                text_tmp = config_controller.UNSWER_TEXT
+            else:
+                text_tmp = tmp_msg[0].msg_text
+            await self.bot.send_message(chat_id=self.user_chat_id, text=text_tmp)
+            return Response("(Текст повідомлення цього акаунту повідомленням вище)\n\nВведіть новий текст повідомлення для цього акаунту:", buttons=markups.generate_cancel())
+
         elif data_btn in (await self.get_phones()):
             self.current_phone = data_btn
             self.current_acc_model = self.accs_controller.get_by(phone=self.current_phone)[0]
@@ -292,11 +319,11 @@ class AccListState(UserState):
                                 f"Телефон: {self.current_acc_model.phone}\n"
                                 f"Пароль: {self.current_acc_model.password}\n"
                                 f"Проксі: {self.current_acc_model.proxy.ip+':'+str(self.current_acc_model.proxy.port)}",
-                                buttons=markups.generate_delete_cancel())
+                                buttons=markups.generate_delete_cancel_msg())
             else:
                 return Response(f"Назва: {self.current_acc_model.name}\n"
                                 f"Телефон: {self.current_acc_model.phone}\n"
                                 f"Пароль: {self.current_acc_model.password}\n"
                                 f"Проксі: None",
-                                buttons=markups.generate_delete_cancel())
+                                buttons=markups.generate_delete_cancel_msg())
 

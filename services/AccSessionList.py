@@ -3,6 +3,7 @@ from telethon import TelegramClient, events
 from telethon.errors.rpcerrorlist import PeerFloodError, UserPrivacyRestrictedError, FloodWaitError, UserDeletedError, UserInvalidError, UserDeactivatedError, UsernameInvalidError
 from db.controllers.AccsController import AccsController
 from db.controllers.EventsController import EventsController
+from db.controllers.MsgsController import MsgsController
 import config_controller
 import random
 import asyncio
@@ -12,6 +13,7 @@ class AccSessionList:
         self.ses_list = {} #{"name_session": {"session": obj; "count": int}}
         self.accs_controller = AccsController()
         self.events_controller = EventsController()
+        self.msgs_controller = MsgsController()
 
         self.path_sessions = "saved/sessions/"
 
@@ -21,6 +23,8 @@ class AccSessionList:
             sender_id = event.sender_id
             me = await event.client.get_me()
             my_id = me.id
+            ses_name = event.client.session.filename.replace(".session", "").replace(self.path_sessions, "")
+
             print(f"[{event.client.session.filename}] Msg at {sender_id}: {event.text}")
 
             tmp = self.events_controller.get_by(tg_id=str(sender_id), tg_id_group=str(my_id))
@@ -35,7 +39,14 @@ class AccSessionList:
             if len(tmp) > 0:
                 return
 
-            await event.client.send_message(sender_id, config_controller.UNSWER_TEXT)
+            tmp_msg = self.msgs_controller.get_by(acc_id=int(ses_name))
+            text_send = ""
+            if len(tmp_msg) == 0:
+                text_send = config_controller.UNSWER_TEXT
+            else:
+                text_send = tmp_msg[0].msg_text
+
+            await event.client.send_message(sender_id, text_send)
             self.events_controller.create(acc_id=1,
                                           name_type="msg",
                                           tg_id=str(sender_id),

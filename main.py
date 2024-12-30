@@ -187,7 +187,7 @@ preload_accs()
 
 
 acc_wait_controller = AccWaitController()
-
+print("START")
 async def main():
     task1 = asyncio.create_task(bot.polling(non_stop=True))
     task2 = asyncio.create_task(acc_wait_controller.start_all())
